@@ -22,6 +22,9 @@ let fireplaceState = 'off'; // 'off', 'on', 'jumpscare'
 let showJumpscare = false;
 let jumpscareTimer = 0;
 
+// Interactive object images
+let radioImg;
+
 // Particle systems
 let fireEmbers = [];
 let sparkles = [];
@@ -213,14 +216,15 @@ function preload() {
   tempI = 1;
   pageImages[tempI] = loadImage('christmas_livingroom.png');
 
+  // Load interactive object images
+  radioImg = loadImage('radio.png');
+
   // ********************
   // Load Audio
   // ********************
   fireplaceSound = loadSound('audio/fireplace.mp3');
   doorOpenSound = loadSound('audio/door opening.mp3');
-  // Note: You'll need to add a Christmas music file to the audio folder
-  // For now, we'll use the snow sound as ambient music
-  christmasMusic = loadSound('audio/snow.mp3');
+  christmasMusic = loadSound('audio/christmas_song.mp3');
 }
 
 function draw() {
@@ -235,6 +239,9 @@ function draw() {
 
   // Living room interactive elements (scene 1)
   if (currentPageIndex === 1) {
+    // Draw radio
+    displayRadio();
+
     // Draw tree decorations
     for (let ornament of treeDecorations) {
       ornament.display();
@@ -473,22 +480,58 @@ function updateAndDrawSparkles() {
   }
 }
 
+function displayRadio() {
+  if (!radioImg) return;
+
+  push();
+
+  // Radio position and size
+  let radioX = width * 0.47;  // Left side of the room
+  let radioY = height * 0.28;  // Lower area
+  let radioWidth = width * 0.08;  // Adjust size as needed
+  let radioHeight = radioWidth * (radioImg.height / radioImg.width); // Maintain aspect ratio
+
+  // Draw glow effect if music is playing
+  if (isRadioPlaying) {
+    // Pulsing glow effect
+    let glowSize = 10 + sin(frameCount * 0.1) * 5;
+    fill(255, 215, 0, 100);
+    noStroke();
+    ellipse(radioX + radioWidth/2, radioY + radioHeight/2, radioWidth + glowSize, radioHeight + glowSize);
+  }
+
+  // Draw the radio image
+  imageMode(CORNER);
+  image(radioImg, radioX, radioY, radioWidth, radioHeight);
+
+  // Draw music notes if playing
+  if (isRadioPlaying) {
+    fill(255, 215, 0);
+    textSize(20);
+    textAlign(CENTER);
+    text("♪", radioX + radioWidth + 10, radioY + sin(frameCount * 0.1) * 5);
+    text("♫", radioX + radioWidth + 25, radioY + 15 + cos(frameCount * 0.15) * 5);
+  }
+
+  pop();
+}
+
 function displayInteractionHints() {
   push();
-  fill(0, 0, 0, 200);
+  fill(128, 128, 128, 200);
   textAlign(CENTER);
-  textSize(16);
+  textSize(14);
 
   // Tree hint (right side)
   text("Click tree to decorate", width * 0.78, height * 0.15);
 
-  // Radio hint (right side, upper area)
+  // Radio hint (left side, lower area)
   let radioHint = isRadioPlaying ? "Click radio to stop music" : "Click radio for music";
-  // text(radioHint, width * 0.78, height * 0.10);
+  text(radioHint, width * 0.35, height * 0.28);
 
   // Fireplace hint (center-left)
   let fireplaceHint = fireplaceState === 'off' ? "Click fireplace to light" : "Click fireplace to extinguish";
-  // text(fireplaceHint, width * 0.42, height * 0.85);
+  text(fireplaceHint, width * 0.42, height * 0.85);
 
   pop();
 }
@@ -542,12 +585,15 @@ function isNearTree(x, y) {
 }
 
 function isNearRadio(x, y) {
-  // Radio/music control area (upper right, near ceiling lights)
-  let radioX = width * 0.78;
-  let radioY = height * 0.08;
-  let radioSize = 80;
+  // Radio is on the left side, lower area
+  let radioX = width * 0.48;
+  let radioY = height * 0.28;
+  let radioWidth = width * 0.08;
+  let radioHeight = radioWidth * 1.2; // Approximate aspect ratio
 
-  return dist(x, y, radioX, radioY) < radioSize;
+  // Check if click is within the radio image bounds
+  return x > radioX && x < radioX + radioWidth &&
+         y > radioY && y < radioY + radioHeight;
 }
 
 function isNearFireplace(x, y) {
