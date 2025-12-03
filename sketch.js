@@ -646,7 +646,7 @@ function updateAndDrawSnowflakes() {
 function updateAndDrawFireEmbers() {
   // Generate new embers from fireplace area (center of room)
   if (random(1) < 0.3) {
-    let emberX = width * 0.42 + random(-30, 30);
+    let emberX = width * 0.5 + random(-30, 30);
     let emberY = height * 0.55 + random(-20, 20);
     fireEmbers.push(new FireEmber(emberX, emberY));
   }
@@ -789,7 +789,7 @@ function isNearRadio(x, y) {
 
 function isNearFireplace(x, y) {
   // Fireplace is in the center of the room
-  let fireplaceX = width * 0.42;
+  let fireplaceX = width * 0.5;
   let fireplaceY = height * 0.52;
   let fireplaceWidth = width * 0.12;
   let fireplaceHeight = height * 0.25;
