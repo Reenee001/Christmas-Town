@@ -8,6 +8,8 @@ let consequences = []; // array of lists (aka as arrays)
 let doorColor;
 let doorColor_livingroom;
 
+let townMusic;
+
 // Clouds
 let frontClouds = [];
 let distantClouds = [];
@@ -308,6 +310,7 @@ function preload() {
   // ********************
   // Load Audio
   // ********************
+  townMusic = loadSound('audio/snow.mp3');
   fireplaceSound = loadSound('audio/fireplace.mp3');
   doorOpenSound = loadSound('audio/door opening.mp3');
   christmasMusic = loadSound('audio/christmas_song.mp3');
@@ -317,6 +320,11 @@ function draw() {
   displayCurrentPage();
   // Only show clouds when on the first scene (index 0)
   if (currentPageIndex === 0) {
+    //bg music
+    if(!townMusic.isPlaying()) {
+      townMusic.loop();
+      townMusic.setVolume(0.8);
+    }
     // Add snowflakes in town scene
     updateAndDrawSnowflakes();
     displayTownText();
@@ -355,6 +363,12 @@ function draw() {
 
   // Living room interactive elements (scene 1)
   if (currentPageIndex === 1) {
+    //stop town music
+    if (townMusic.isPlaying()) {
+      // townMusic.stop();
+      townMusic.setVolume(0);
+    }
+
     // Draw radio
     displayRadio();
 
