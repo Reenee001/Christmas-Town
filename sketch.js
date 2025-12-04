@@ -8,6 +8,8 @@ let consequences = []; // array of lists (aka as arrays)
 let doorColor;
 let doorColor_livingroom;
 
+let townMusic;
+
 // Clouds
 let frontClouds = [];
 let distantClouds = [];
@@ -390,6 +392,7 @@ function preload() {
   // ********************
   // Load Audio
   // ********************
+  townMusic = loadSound('audio/snow.mp3');
   fireplaceSound = loadSound('audio/fireplace.mp3');
   doorOpenSound = loadSound('audio/door opening.mp3');
   christmasMusic = loadSound('audio/christmas_song.mp3');
@@ -399,6 +402,11 @@ function draw() {
   displayCurrentPage();
   // Only show clouds when on the first scene (index 0)
   if (currentPageIndex === 0) {
+    //bg music
+    if(!townMusic.isPlaying()) {
+      townMusic.loop();
+      townMusic.setVolume(0.8);
+    }
     // Add snowflakes in town scene
     updateAndDrawSnowflakes();
     displayTownText();
@@ -464,6 +472,12 @@ function draw() {
 
   // Living room interactive elements (scene 1)
   if (currentPageIndex === 1) {
+    //stop town music
+    if (townMusic.isPlaying()) {
+      // townMusic.stop();
+      townMusic.setVolume(0);
+    }
+
     // Draw radio
     displayRadio();
 
@@ -727,11 +741,11 @@ function mousePressed() {
   // Navigation between scenes
   if (detectColor(doorColor)) {
     currentPageIndex = 1; // go to living room scene
-    if (doorOpenSound) doorOpenSound.play();
+    if (doorOpenSound) doorOpenSound.play(0,2,0.5,3,1);
   }
   else if (currentPageIndex === 1 && detectColor(doorColor_livingroom)) {
     currentPageIndex = 0; // go back to town
-    if (doorOpenSound) doorOpenSound.play();
+    if (doorOpenSound) doorOpenSound.play(0,2,0.5,3,1);
     // Stop music when leaving living room
     if (christmasMusic && christmasMusic.isPlaying()) {
       christmasMusic.stop();
@@ -867,7 +881,7 @@ function updateAndDrawSnowflakes() {
 function updateAndDrawFireEmbers() {
   // Generate new embers from fireplace area (center of room)
   if (random(1) < 0.3) {
-    let emberX = width * 0.42 + random(-30, 30);
+    let emberX = width * 0.5 + random(-30, 30);
     let emberY = height * 0.55 + random(-20, 20);
     fireEmbers.push(new FireEmber(emberX, emberY));
   }
@@ -1010,7 +1024,7 @@ function isNearRadio(x, y) {
 
 function isNearFireplace(x, y) {
   // Fireplace is in the center of the room
-  let fireplaceX = width * 0.42;
+  let fireplaceX = width * 0.5;
   let fireplaceY = height * 0.52;
   let fireplaceWidth = width * 0.12;
   let fireplaceHeight = height * 0.25;
