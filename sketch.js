@@ -31,6 +31,33 @@ let windows = [
     {x:1240, y:600, w :55, h:70}
 ];
 
+//sled
+let sledImg;
+let sledX, sledY;
+//let sledW, sledH;
+
+let sledSliding = false; // animation
+let sledSlideSpeed = 6; //speed of sled
+
+let sledTrail = [];
+let santaTrail = [];
+
+let playerX = 200;
+let playerY = 300;
+let playerVY = 0;    // vertical velocity for jumping
+let gravity = 0.6;
+let jumpForce = -10;
+
+let sledW = 70;
+let sledH = 45;
+
+let hillY = 0;
+let hillSpeed = 3;
+
+let groundY = 350;
+
+let obstacles = [];
+let gameOver = false;
 
 // Audio variables
 let fireplaceSound;
@@ -105,6 +132,57 @@ class Cloud {
       this.spacingOffset = random(-5, 5);
       this.diaOffset = random(-10, 10);
     }
+  }
+}
+
+class SledTrailFlake {
+  constructor(x, y) {
+    this.x = x;
+    this.y = y;
+    this.size = random(8, 14);
+    this.alpha = 255;
+    this.shrinkSpeed = random(0.2, 0.5);
+    this.fadeSpeed = random(3, 6);
+  }
+
+  update() {
+    this.size -= this.shrinkSpeed;
+    this.alpha -= this.fadeSpeed;
+  }
+
+  display() {
+    noStroke();
+    fill(255, this.alpha);
+    circle(this.x, this.y, this.size);
+  }
+
+  isGone() {
+    return this.alpha <= 0 || this.size <= 0;
+  }
+}
+class SantaTrailFlake {
+  constructor(x, y) {
+    this.x = x;
+    this.y = y;
+    this.size = random(8, 14);
+    this.alpha = 255;
+    this.shrinkSpeed = random(0.2, 0.5);
+    this.fadeSpeed = random(3, 6);
+  }
+
+  update() {
+    this.size -= this.shrinkSpeed;
+    this.alpha -= this.fadeSpeed;
+  }
+
+  display() {
+    noStroke();
+    fill(255, this.alpha);
+    circle(this.x, this.y, this.size);
+  }
+
+  isGone() {
+    return this.alpha <= 0 || this.size <= 0;
   }
 }
 
@@ -305,6 +383,10 @@ function preload() {
   // Load interactive object images
   radioImg = loadImage('radio.png');
 
+  // Load sled image
+  sledImg = loadImage('sled.png');
+
+
   // ********************
   // Load Audio
   // ********************
@@ -331,6 +413,33 @@ function draw() {
     
     //window lights
     displayWindowLights();
+
+    //draw sled
+    image(sledImg, sledX, sledY, sledW, sledH);
+
+    // If sled is sliding, animate it
+    if (sledSliding) {
+        sledX += sledSlideSpeed;   // slide horizontally
+
+        //leaves snow trail puff
+        sledTrail.push(new SledTrailFlake(sledX, sledY +sledH/2));
+
+    // When it slides off screen, switch to sledding screen
+    if (sledX > width + 200) {
+        sledSliding = false;
+        currentPageIndex = 2; // Go to sledding screen
+    }
+    }   
+   // Draw sled trail
+    for (let i = sledTrail.length - 1; i >= 0; i--) {
+         let t = sledTrail[i];
+        t.update();
+        t.display();
+  
+        if (t.isGone()) {
+            sledTrail.splice(i, 1);
+        }
+    }
   }
     // --- Hover detection for interactive objects ---
   if (currentPageIndex === 0 && detectColor(doorColor)) {
@@ -379,6 +488,104 @@ function draw() {
     // Display interaction hints
     displayInteractionHints();
   }
+
+  //Sled Game (scene 2)
+  if (currentPageIndex === 2) {
+
+  // Stop everything if crashed
+   if (gameOver) {
+    background(0, 0, 0, 180);
+    textAlign(CENTER, CENTER);
+    fill(255, 0, 0);
+    textSize(60);
+    text("CRASH!", width / 2, height / 2);
+    return;
+  }
+
+  // HILL SCROLL
+  hillY += hillSpeed;
+  if (hillY > height) hillY = 0;
+
+  drawHill(hillY);
+  drawHill(hillY - height);
+
+  // GRAVITY (flappy-bird style)
+  playerVY += gravity;
+  playerY += playerVY;
+
+  // GROUND COLLISION
+  let realGround = height - 200; // <<< FIXED GROUND //where the sled image will stop on the screen vertically
+  if (playerY > realGround) {
+    playerY = realGround;
+    playerVY = 0;
+  }
+
+  // Draw sled
+  image(sledImg, playerX, playerY, sledW, sledH);
+
+  // SPAWN OBSTACLES
+  if (frameCount % 100 === 0) {
+    createObstacle(realGround);
+  }
+
+  // MOVE + DRAW OBSTACLES
+  for (let i = obstacles.length - 1; i >= 0; i--) {
+    let ob = obstacles[i];
+    ob.x -= 6;
+
+    fill(150);
+    rect(ob.x, ob.y, ob.w, ob.h);
+
+    if (ob.x < -200) {
+      obstacles.splice(i, 1);
+      continue;
+    }
+
+    // COLLISION
+    if (
+      playerY + sledW > ob.x &&
+      playerX < ob.x + ob.w &&
+      sledY + sledH > ob.y
+    ) {
+      gameOver = true;
+    }
+  }
+}
+}
+
+function drawHill(yOffset){
+    noStroke();
+    fill(255); // white snow
+
+     beginShape();
+  for (let x = 0; x <= width; x += 10) {
+    let y = (height - 150) + 50 * sin((x * 0.02) + (frameCount * 0.05)) - yOffset;
+    vertex(x, y);
+  }
+  vertex(width, height);
+  vertex(0, height);
+  endShape(CLOSE);
+}
+
+
+function createObstacle() {
+  let h = random(40, 100);  // obstacle height
+  //let y = random(200, height - h - 50);
+  let ob = {
+    x: width + 50,           // start off-screen right
+    y: groundY - h,    // adjust height of obstacle
+    w: 40,              // width of obstacle
+    h: h               // height of obstacle
+  };
+  obstacles.push(ob);
+}
+
+function keyPressed() {
+   if (currentPageIndex === 2 && !gameOver) {   // only jump on sledding screen
+    if (key === ' ') {   // press space
+      playerVY = jumpForce;    // jump force
+    }
+  }
 }
 
 function setup() {
@@ -397,6 +604,12 @@ function setup() {
 
   //window Lights
   setupWindowLights();
+
+  //sled
+  sledW = 200; //its width
+  sledH = sledW * (sledImg.height/ sledImg.width); //helps keep the aspect ratio 
+  sledX = 1050; //position
+  sledY = 650; //position
 
   // Initialize snowflakes
   for (let i = 0; i < 50; i++) {
@@ -530,6 +743,14 @@ function mousePressed() {
     fireplaceState = 'off';
   }
 
+  // Sled Click
+  if (currentPageIndex === 0 && mouseX > sledX && 
+    mouseX < sledX + sledW && mouseY > sledY && mouseY < sledY + sledH) {
+   sledSliding = true;
+  }
+
+
+
   // Living room interactions
   if (currentPageIndex === 1) {
     // Christmas tree decoration
@@ -607,7 +828,7 @@ function updateAndDrawClouds() {
     cloud.move();
     cloud.display();
   }
-  
+
 //second draw front clouds on top
   for (let cloud of frontClouds){
     cloud.move();
