@@ -736,6 +736,7 @@ function displayRadio() {
 
 function displayInteractionHints() {
   push();
+  noStroke();
   fill(128, 128, 128, 200);
   textAlign(CENTER);
   textSize(14);
