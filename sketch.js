@@ -38,6 +38,7 @@ let windows = [
 let fireplaceSound;
 let christmasMusic;
 let doorOpenSound;
+let jumpscareSound;
 
 // Interactive objects state
 let treeDecorations = [];
@@ -314,7 +315,8 @@ function preload() {
   fireplaceSound = loadSound('audio/fireplace.mp3');
   doorOpenSound = loadSound('audio/door opening.mp3');
   christmasMusic = loadSound('audio/christmas_song.mp3');
-  sparkleSound = loadSound('audio/sparkle.wav')
+  sparkleSound = loadSound('audio/sparkle.wav');
+  jumpscareSound = loadSound('audio/ho_ho_ho.wav');
 }
 
 function draw() {
@@ -363,12 +365,12 @@ function draw() {
 
 
   // Living room interactive elements (scene 1)
-  if (currentPageIndex === 1) {
-    //stop town music
-    if (townMusic.isPlaying()) {
-      // townMusic.stop();
-      townMusic.setVolume(0);
+    if (currentPageIndex === 1) {
+      // stop town music
+      if (townMusic.isPlaying()) {
+        townMusic.stop();   // <-- use stop instead of setVolume(0)
     }
+
 
     // Draw radio
     displayRadio();
@@ -597,6 +599,7 @@ function mousePressed() {
     }
 
     // Fireplace interaction
+    // Fireplace interaction
     if (isNearFireplace(mouseX, mouseY)) {
       if (fireplaceState === 'off') {
         fireplaceState = 'on';
@@ -605,8 +608,10 @@ function mousePressed() {
         // Extinguish fire - trigger jumpscare
         fireplaceState = 'off';
         if (fireplaceSound) fireplaceSound.stop();
-        showJumpscare = true;
-        jumpscareTimer = 0;
+
+        // Call the trigger function so sound plays once
+        triggerJumpscare();
+
         fireEmbers = []; // Clear embers
       }
     }
@@ -845,3 +850,20 @@ function displayTownText() {
     text("Click sled for fun", width-450, height-30);
   pop();
 }
+
+function triggerJumpscare() {
+  // Resume audio context if blocked
+  if (getAudioContext().state !== 'running') {
+    getAudioContext().resume();
+  }
+
+  showJumpscare = true;
+  jumpscareTimer = 0;
+
+  if (jumpscareSound && jumpscareSound.isLoaded()) {
+    jumpscareSound.setVolume(0.7); // safe volume
+    jumpscareSound.play();         // play once
+  }
+}
+
+
