@@ -566,7 +566,7 @@ function mousePressed() {
         color(230, 130, 130),    // Red
         color(130, 230, 130),    // Green
         color(130, 130, 230),    // Blue
-        color(225, 215, 90),  // Gold
+        color(245, 205, 90),  // Gold
         color(255, 192, 203) // Pink
       ];
       let types = ['ball', 'star', 'candy'];
