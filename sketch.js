@@ -8,6 +8,11 @@ let consequences = []; // array of lists (aka as arrays)
 let doorColor;
 let doorColor_livingroom;
 
+<<<<<<< HEAD
+=======
+let townMusic;
+
+>>>>>>> 17f825b62f7b4ea07457c67de7f0e9b50251ec27
 // Clouds
 let frontClouds = [];
 let distantClouds = [];
@@ -31,6 +36,7 @@ let windows = [
     {x:1240, y:600, w :55, h:70}
 ];
 
+<<<<<<< HEAD
 //sled
 let sledImg;
 let sledX, sledY;
@@ -68,6 +74,8 @@ let santaTrail = [];
 
 let santaW= 70;
 let santaH =45;
+=======
+>>>>>>> 17f825b62f7b4ea07457c67de7f0e9b50251ec27
 
 // Audio variables
 let fireplaceSound;
@@ -93,29 +101,58 @@ let snowflakes = [];
 let stars = [];
 
 class Cloud {
-  constructor(x, y, speed) {
+  constructor(x, y, speed, scale = 1, alphaRange = [150, 200]) {
     this.x = x;
+    this.baseY = y;
     this.y = y;
     this.speed = speed;
+    this.scale = scale;
+    this.alpha = random(alphaRange[0], alphaRange[1]);
+
+    // Fixed random offsets to prevent shaking
+    this.spacingOffset = random(-5, 5);
+    this.diaOffset = random(-10, 10);
+    this.alphaRange = alphaRange;
+    this.floatPhase = random(TWO_PI);
   }
+
   display() {
-    fill(255);
+    // Smooth vertical floating
+    this.y = this.baseY + sin(frameCount * 0.002) * 3;
+
+    // Subtle alpha jitter
+    this.alpha += random(-1, 1);
+    this.alpha = constrain(this.alpha, this.alphaRange[0], this.alphaRange[1]);
+
+    fill(255, this.alpha);
     noStroke();
-    drawClouds(this.x, this.y, 35, 65);
-    drawClouds(this.x + 10, this.y + 10, 40, 75);
-    drawClouds(this.x - 20, this.y + 10, 40, 75);
-    drawClouds(this.x, this.y - 10, 40, 75);
-    drawClouds(this.x + 20, this.y - 10, 10, 45);
+
+    // Draw cloud
+    let spacing = 35 * this.scale + this.spacingOffset;
+    let dia = 65 * this.scale + this.diaOffset;
+
+    drawClouds(this.x, this.y, spacing, dia);
+    drawClouds(this.x + 10 * this.scale, this.y + 10 * this.scale, spacing + 5, dia + 10);
+    drawClouds(this.x - 20 * this.scale, this.y + 10 * this.scale, spacing + 5, dia + 10);
+    drawClouds(this.x, this.y - 10 * this.scale, spacing + 5, dia + 10);
+    drawClouds(this.x + 20 * this.scale, this.y - 10 * this.scale, spacing / 3, dia / 2);
   }
 
   move() {
-    this.x += this.speed;
+    this.x += this.speed * random(0.90,1.10);
+
     if (this.x > width + 80) {
-      this.x = -80;
-      this.y = random(50, height / 2);
+      this.x = random(-80, -20);
+      this.baseY = random(this.baseY - 10, this.baseY +10); // vertical range
+      this.speed = this.speed;
+      this.scale = this.scale;
+      this.alpha = random(this.alphaRange[0], this.alphaRange[1]);
+      this.spacingOffset = random(-5, 5);
+      this.diaOffset = random(-10, 10);
     }
   }
 }
+
 
 class Snowflake {
   constructor(x, y) {
@@ -322,16 +359,25 @@ function preload() {
   // ********************
   // Load Audio
   // ********************
+  townMusic = loadSound('audio/snow.mp3');
   fireplaceSound = loadSound('audio/fireplace.mp3');
   doorOpenSound = loadSound('audio/door opening.mp3');
   christmasMusic = loadSound('audio/christmas_song.mp3');
+  sparkleSound = loadSound('audio/sparkle.wav')
 }
 
 function draw() {
   displayCurrentPage();
-
   // Only show clouds when on the first scene (index 0)
   if (currentPageIndex === 0) {
+<<<<<<< HEAD
+=======
+    //bg music
+    if(!townMusic.isPlaying()) {
+      townMusic.loop();
+      townMusic.setVolume(0.8);
+    }
+>>>>>>> 17f825b62f7b4ea07457c67de7f0e9b50251ec27
     // Add snowflakes in town scene
     updateAndDrawSnowflakes();
     displayTownText();
@@ -346,6 +392,7 @@ function draw() {
     
     //window lights
     displayWindowLights();
+<<<<<<< HEAD
 
     //draw sled
     image(sledImg, sledX, sledY, sledW, sledH);
@@ -395,6 +442,8 @@ function draw() {
             santaTrail.splice(i, 1);
         }
     }
+=======
+>>>>>>> 17f825b62f7b4ea07457c67de7f0e9b50251ec27
   }
     // --- Hover detection for interactive objects ---
   if (currentPageIndex === 0 && detectColor(doorColor)) {
@@ -419,6 +468,12 @@ function draw() {
 
   // Living room interactive elements (scene 1)
   if (currentPageIndex === 1) {
+    //stop town music
+    if (townMusic.isPlaying()) {
+      // townMusic.stop();
+      townMusic.setVolume(0);
+    }
+
     // Draw radio
     displayRadio();
 
@@ -456,13 +511,11 @@ function setup() {
   doorColor = color('#893f00');
   doorColor_livingroom = color('#5b3022');
 
-  // Initialize clouds
-  for (let i = 0; i < 5; i++) {
-    let xPos = random(0, width);
-    let yPos = random(50, height / 2);
-    let cloudSpeed = random(0.5, 2);
-    clouds.push(new Cloud(xPos, yPos, cloudSpeed));
-  }
+  //Call the setupClouds function
+  setupClouds();
+
+  //window Lights
+  setupWindowLights();
 
   //santa
   santaW = 350 // its width
@@ -496,6 +549,48 @@ function setup() {
 }
 }
 
+function setupClouds() {
+  frontClouds = [];
+  distantClouds = [];
+
+  // Front clouds - fewer and spread vertically to prevent blotch
+  for (let i = 0; i < 12; i++) {
+    let x = random(0, width);
+    let y = random(50, 180); // narrower vertical range
+    let speed = random(0.3, 1);
+    let scale = random(0.9,1.1);
+    frontClouds.push(new Cloud(x, y, speed, 1, [150, 200]));
+  }
+
+  // Distant clouds - smaller, higher, more transparent
+  for (let i = 0; i < 6; i++) {
+    let x = random(0, width);
+    let y = random(30, 130);
+    let speed = random(0.05, 0.25);
+    let scale = random(0.6, 0.8);
+    distantClouds.push(new Cloud(x, y, speed, scale, [80, 130]));
+  }
+}
+
+function setupWindowLights(){
+    windowLights = [];
+
+   for (let win of windows) {
+    let lightsPerWindow = 20; // more lights per window
+        for (let i = 0; i < lightsPerWindow; i++) {
+            let x = win.x + random(0, win.w);
+            let y = win.y + random(0, win.h);
+            let baseBrightness = random(200, 220);
+            let size = random(3, 4);
+
+            // Each light gets a random phase for smooth twinkle
+            let phase = random(TWO_PI);
+            let speed = random(0.02, 0.06); // twinkle speed
+
+            windowLights.push({ x, y, baseBrightness, size, phase, speed });
+        }
+  }
+}
 
 // Styling for the page layout
 function displayCurrentPage() {
@@ -541,14 +636,25 @@ function detectColor(targetColor) { //function that when click on x, y scene/ima
 }
 
 function mousePressed() {
+  // Resume audio context if blocked
+  if (getAudioContext().state !== 'running') {
+    getAudioContext().resume();
+  }
+
+  // Optional: trigger music if in town scene
+  if (currentPageIndex === 0 && !townMusic.isPlaying()) {
+    townMusic.loop();
+    townMusic.setVolume(0.8);
+  }
+
   // Navigation between scenes
   if (detectColor(doorColor)) {
     currentPageIndex = 1; // go to living room scene
-    if (doorOpenSound) doorOpenSound.play();
+    if (doorOpenSound) doorOpenSound.play(0,2,0.5,3,1);
   }
   else if (currentPageIndex === 1 && detectColor(doorColor_livingroom)) {
     currentPageIndex = 0; // go back to town
-    if (doorOpenSound) doorOpenSound.play();
+    if (doorOpenSound) doorOpenSound.play(0,2,0.5,3,1);
     // Stop music when leaving living room
     if (christmasMusic && christmasMusic.isPlaying()) {
       christmasMusic.stop();
@@ -594,6 +700,7 @@ function mousePressed() {
       for (let i = 0; i < 5; i++) {
         sparkles.push(new Sparkle(mouseX + random(-20, 20), mouseY + random(-20, 20)));
       }
+      sparkleSound.play(0, 1, 0.3, 0, 2);
     }
 
     // Radio interaction
@@ -628,7 +735,7 @@ function mousePressed() {
   }
 }
 
-
+//--draw single cloud--
 function drawClouds(x,y,spacing,dia){
 
   push();
@@ -644,10 +751,38 @@ function drawClouds(x,y,spacing,dia){
 }
 
 function updateAndDrawClouds() {
-  for (let i = 0; i < clouds.length; i++) {
-    clouds[i].move();
-    clouds[i].display();
+//first draw distant clouds
+  for (let cloud of distantClouds) {
+    cloud.move();
+    cloud.display();
   }
+  
+//second draw front clouds on top
+  for (let cloud of frontClouds){
+    cloud.move();
+    cloud.display();
+  }
+}
+
+function displayWindowLights(){
+    for (let light of windowLights) {
+        //smooth brightness using sin wave
+        let twinkle = sin(frameCount * light.speed + light.phase) * 150;
+        let brightness = constrain(light.baseBrightness + twinkle, 150, 255);
+
+        noStroke();
+
+        //core glow
+        fill(255, 255, 200, brightness);
+        circle(light.x, light.y, light.size);
+
+        //soft halo
+        fill(255, 255, 180, brightness * 0.5);
+        circle(light.x, light.y, light.size * 4);
+
+        fill(255, 255, 150, brightness * 0.3);
+        circle(light.x, light.y, light.size * 8);
+    }
 }
 
 function updateAndDrawSnowflakes() {
@@ -660,7 +795,7 @@ function updateAndDrawSnowflakes() {
 function updateAndDrawFireEmbers() {
   // Generate new embers from fireplace area (center of room)
   if (random(1) < 0.3) {
-    let emberX = width * 0.42 + random(-30, 30);
+    let emberX = width * 0.5 + random(-30, 30);
     let emberY = height * 0.55 + random(-20, 20);
     fireEmbers.push(new FireEmber(emberX, emberY));
   }
@@ -803,7 +938,7 @@ function isNearRadio(x, y) {
 
 function isNearFireplace(x, y) {
   // Fireplace is in the center of the room
-  let fireplaceX = width * 0.42;
+  let fireplaceX = width * 0.5;
   let fireplaceY = height * 0.52;
   let fireplaceWidth = width * 0.12;
   let fireplaceHeight = height * 0.25;
@@ -818,7 +953,16 @@ function displayTownText() {
     textSize(20);
     fill(100,100,120);
     strokeWeight(3);
-    stroke(200,200,200);
+    //stroke(200,200,200);
     text("Click a door to enter", 30, height-30);
+  pop();
+
+  push();
+    textFont('Georgia');
+    textSize(20);
+    fill(100,100,120);
+    strokeWeight(3);
+    //stroke(200,200,200);
+    text("Click sled for fun", width-450, height-30);
   pop();
 }
